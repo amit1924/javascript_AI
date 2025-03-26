@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Jarvis AI Assistant</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600&display=swap" rel="stylesheet">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://js.puter.com/v2/"></script>
+  
+
+    <link rel="stylesheet" href="style.css">
+</head>
+<body class="gradient-bg text-gray-100 min-h-screen md:max-h-screen flex flex-col items-center p-4 md:p-6 transition-colors duration-500 font-sans">
+    <div class="w-full max-w-md md:max-w-3xl flex flex-col h-[90vh] md:h-[100vh] ">
+        <!-- Animated Header -->
+        <div class="flex items-center justify-between mb-6 neon-border rounded-xl p-3">
+            <div class="flex items-center space-x-3">
+                <div class="relative">
+                    <div class="w-3 h-3 rounded-full bg-gray-500" id="status-light"></div>
+                    <div class="absolute inset-0 rounded-full bg-green-500 opacity-0" id="status-glow"></div>
+                </div>
+                <span class="font-medium text-sm neon-text" id="status-text">Sleeping</span>
+                <div id="speaking-indicator" class="hidden items-center space-x-2 text-blue-400">
+                    <div class="w-2 h-2 rounded-full bg-blue-400 pulse"></div>
+                    <span class="text-xs">Speaking</span>
+                </div>
+            </div>
+            
+            <div id="listening-indicator" class="hidden items-center space-x-2 bg-gradient-to-r from-red-900/30 to-pink-900/30 px-3 py-1 rounded-full border border-red-500/30">
+                <div class="w-2 h-2 rounded-full bg-red-500 pulse"></div>
+                <span class="text-xs">Listening</span>
+            </div>
+            
+            <div class="flex items-center space-x-2">
+                <button id="settings-btn" class="text-gray-400 hover:text-blue-400 transition-colors">
+                    <i class="fas fa-cog"></i>
+                </button>
+            </div>
+        </div>
+
+        <!-- Chat Container with Floating Effect -->
+      
+        <div id="chat-container" class="jarvis-card flex-grow rounded-xl p-4 overflow-y-auto mb-4 space-y-3 chat-container transition-all duration-300 hover:shadow-lg">
+       
+            <div class="message">
+                <div class="flex items-start space-x-2">
+                    <div class="bg-blue-500/20 rounded-full w-8 h-8 flex items-center justify-center">
+                        <i class="fas fa-robot text-blue-400"></i>
+                    </div>
+                    <div>
+                        <p class="text-blue-400 font-medium">Jarvis:</p>
+                        <div class="ai-response">
+                            <p>Hello, I'm Jarvis. Say <span class="text-blue-300 font-semibold">"Jarvis"</span> to wake me up.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Controls with Floating Animation -->
+        <div class="flex justify-center space-x-4 mt-4">
+            <button id="mic-btn" class="neon-btn w-14 h-14 rounded-full flex items-center justify-center transition-all float">
+                <i class="fas fa-microphone text-xl" id="mic-icon"></i>
+            </button>
+            <button id="stop-speech-btn" class="neon-btn-danger w-14 h-14 rounded-full flex items-center justify-center transition-all hidden float">
+                <i class="fas fa-stop text-xl"></i>
+            </button>
+        </div>
+
+        <!-- Help Text with Subtle Animation -->
+        <p class="text-center text-xs text-gray-400 mt-4 animate-pulse">
+            <span class="inline-block hover:text-blue-300 transition-colors cursor-help" title="Voice commands you can use">
+                Say "Jarvis" to wake me up, "stop speaking" to interrupt
+            </span>
+        </p>
+    </div>
+
+  
+    <div id="settings-modal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 opacity-0 pointer-events-none transition-opacity duration-300">
+        <div class="jarvis-card rounded-xl p-6 max-w-md w-full transform scale-95 transition-transform duration-300">
+            <div class="flex justify-between items-center mb-4">
+                <h3 class="text-xl font-semibold text-blue-400">Settings</h3>
+                <button id="close-settings" class="text-gray-400 hover:text-blue-400">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            
+            <div class="space-y-4">
+                <div>
+                    <label class="block text-sm font-medium text-gray-300 mb-1">Language</label>
+                    <select id="language-select" class="w-full bg-gray-800 border border-gray-700 rounded-lg px-3 py-2 text-white focus:outline-none focus:ring-2 focus:ring-blue-500">
+                        <option value="en">English</option>
+                        <option value="hi">Hindi (हिन्दी)</option>
+                        <option value="fr">French (Français)</option>
+                        <option value="de">German (Deutsch)</option>
+                        <option value="hu">Hungarian (Magyar)</option>
+                        <option value="es">Spanish (Español)</option>
+                        <option value="ar">Arabic (العربية)</option>
+                        <option value="zh">Chinese (中文)</option>
+                        <option value="ja">Japanese (日本語)</option>
+                        <option value="ru">Russian (Русский)</option>
+                        <option value="pt">Portuguese (Português)</option>
+                        <option value="it">Italian (Italiano)</option>
+                    </select>
+                </div>
+                
+                <div>
+                    <label class="block text-sm font-medium text-gray-300 mb-1">Voice Preference</label>
+                    <select id="voice-select" class="w-full bg-gray-800 border border-gray-700 rounded-lg px-3 py-2 text-white focus:outline-none focus:ring-2 focus:ring-blue-500">
+                        <option value="default">Default System Voice</option>
+                        <option value="male">Male Voice</option>
+                        <option value="female">Female Voice</option>
+                    </select>
+                </div>
+                
+                <div>
+                    <label class="block text-sm font-medium text-gray-300 mb-1">Speech Rate</label>
+                    <input type="range" id="speech-rate" min="0.5" max="2" step="0.1" value="1" class="w-full h-2 bg-gray-700 rounded-lg appearance-none cursor-pointer">
+                    <div class="flex justify-between text-xs text-gray-400">
+                        <span>Slower</span>
+                        <span id="rate-value">Normal</span>
+                        <span>Faster</span>
+                    </div>
+                </div>
+                
+                <div>
+                    <label class="block text-sm font-medium text-gray-300 mb-1">Speech Pitch</label>
+                    <input type="range" id="speech-pitch" min="0.5" max="2" step="0.1" value="1" class="w-full h-2 bg-gray-700 rounded-lg appearance-none cursor-pointer">
+                    <div class="flex justify-between text-xs text-gray-400">
+                        <span>Lower</span>
+                        <span id="pitch-value">Normal</span>
+                        <span>Higher</span>
+                    </div>
+                </div>
+                
+                <div class="pt-2 flex space-x-3">
+                    <button id="save-settings" class="neon-btn flex-1 py-2 rounded-lg font-medium">
+                        Save Settings
+                    </button>
+                    <button id="test-voice" class="bg-gray-700 hover:bg-gray-600 flex-1 py-2 rounded-lg font-medium transition-colors">
+                        Test Voice
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+   <script src="main.js"></script>
+</body>
+</html>
