@@ -352,3 +352,214 @@
 
 
    
+    /* New styling for ai response */
+    /* AI Message Styling */
+.ai-message-content {
+    color: #ffffff;
+    font-size: 1rem;
+    line-height: 1.6;
+  }
+  
+  /* Headings */
+  .ai-heading, .ai-subheading {
+    font-weight: bold;
+    background: linear-gradient(90deg, #4ade80, #3b82f6);
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+    margin: 1rem 0;
+  }
+  
+  .ai-heading {
+    font-size: 1.5rem;
+  }
+  
+  .ai-subheading {
+    font-size: 1.25rem;
+  }
+  
+  /* Paragraphs */
+  .ai-paragraph {
+    margin: 0.75rem 0;
+    color: #e5e7eb;
+  }
+  
+  /* Lists */
+  .ai-bullet-list, .ai-numbered-list {
+    margin: 0.75rem 0;
+    padding-left: 1.5rem;
+  }
+  
+  .colorful-bullet {
+    position: relative;
+    padding-left: 1.25rem;
+    margin: 0.5rem 0;
+  }
+  
+  .colorful-bullet::before {
+    content: "";
+    position: absolute;
+    left: 0;
+    top: 0.6em;
+    width: 0.5rem;
+    height: 0.5rem;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #f59e0b, #ec4899);
+  }
+  
+  .numbered-item {
+    margin: 0.5rem 0;
+  }
+  
+  /* Code */
+  .inline-code {
+    background: rgba(59, 130, 246, 0.2);
+    padding: 0.2rem 0.4rem;
+    border-radius: 0.25rem;
+    font-family: monospace;
+    color: #93c5fd;
+  }
+  
+  .code-block {
+    background: rgba(17, 24, 39, 0.8);
+    padding: 1rem;
+    border-radius: 0.5rem;
+    margin: 1rem 0;
+    overflow-x: auto;
+    font-family: monospace;
+    color: #93c5fd;
+    border-left: 3px solid #3b82f6;
+  }
+  
+  /* Quotes */
+  .ai-quote {
+    border-left: 3px solid #4ade80;
+    padding-left: 1rem;
+    margin: 1rem 0;
+    color: #d1d5db;
+    font-style: italic;
+  }
+  
+  /* Divider */
+  .ai-divider {
+    border: none;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, rgba(59, 130, 246, 0.5), transparent);
+    margin: 1.5rem 0;
+  }
+  
+  /* Links */
+  .ai-link {
+    color: #93c5fd;
+    text-decoration: none;
+    border-bottom: 1px dashed #3b82f6;
+    transition: all 0.2s ease;
+  }
+  
+  .ai-link:hover {
+    color: #bfdbfe;
+    border-bottom: 1px solid #3b82f6;
+  }
+  
+  /* Bold Gradient Text */
+  .bold-gradient {
+    font-weight: bold;
+    background: linear-gradient(90deg, #4ade80, #3b82f6);
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+  }
+  
+  /* Italic Text */
+  .italic-text {
+    font-style: italic;
+    color: #d1d5db;
+  }
+
+  /* clear chat styling */
+
+  /* Clear Chat Button Styles */
+#clear-chat-btn {
+    transition: all 0.3s ease;
+}
+
+#clear-chat-btn:hover {
+    transform: scale(1.1);
+    color: #ef4444 !important;
+}
+
+/* Confirmation Dialog Styles */
+.clear-confirm-dialog {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background: rgba(30, 41, 59, 0.95);
+    padding: 1.5rem;
+    border-radius: 0.5rem;
+    box-shadow: 0 0 20px rgba(239, 68, 68, 0.3);
+    border: 1px solid rgba(239, 68, 68, 0.3);
+    z-index: 100;
+    max-width: 90%;
+    width: 300px;
+    text-align: center;
+}
+
+.clear-confirm-dialog p {
+    margin-bottom: 1.5rem;
+    color: #e2e8f0;
+}
+
+.clear-confirm-buttons {
+    display: flex;
+    justify-content: center;
+    gap: 1rem;
+}
+
+.clear-confirm-buttons button {
+    padding: 0.5rem 1rem;
+    border-radius: 0.25rem;
+    font-weight: 500;
+    transition: all 0.2s;
+}
+
+#confirm-clear {
+    background-color: #ef4444;
+    color: white;
+}
+
+#confirm-clear:hover {
+    background-color: #dc2626;
+}
+
+#cancel-clear {
+    background-color: #334155;
+    color: #e2e8f0;
+}
+
+#cancel-clear:hover {
+    background-color: #475569;
+}
+
+/* Mobile Responsiveness */
+@media (max-width: 640px) {
+    .clear-confirm-dialog {
+        width: 90%;
+        padding: 1rem;
+    }
+    
+    .clear-confirm-buttons {
+        flex-direction: column;
+        gap: 0.5rem;
+    }
+    
+    .clear-confirm-buttons button {
+        width: 100%;
+    }
+    
+    #clear-chat-btn {
+        font-size: 0.9rem;
+    }
+}

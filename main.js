@@ -265,7 +265,6 @@ document.addEventListener("DOMContentLoaded", () => {
     micBtn.classList.remove("animate-pulse");
   }
 
-  // Process user command
   function processCommand(command) {
     const lowerCommand = command.toLowerCase();
 
@@ -306,6 +305,15 @@ document.addEventListener("DOMContentLoaded", () => {
       return;
     }
 
+    // Check for search command
+    if (lowerCommand.includes("search") || lowerCommand.includes("look up")) {
+      const query = command.replace(/search|look up/gi, "").trim();
+      if (query) {
+        searchGoogle(query);
+        return;
+      }
+    }
+
     // Check for YouTube song command
     if (
       (lowerCommand.includes("play") || lowerCommand.includes("open")) &&
@@ -341,6 +349,56 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   }
 
+  function searchGoogle(query) {
+    try {
+      // Validate input
+      if (!query || typeof query !== "string" || query.trim() === "") {
+        addMessage("assistant", "Please provide a valid search query");
+        return;
+      }
+
+      // Store voice recognition state
+      const wasListening = isListening;
+      if (wasListening) {
+        stopVoiceRecognition();
+      }
+
+      // Create search URL with proper encoding
+      const cleanQuery = query.trim();
+      const encodedQuery = encodeURIComponent(cleanQuery);
+      const searchUrl = `https://www.google.com/search?q=${encodedQuery}`;
+
+      // Attempt to open the search in a new tab
+      const newWindow = window.open(searchUrl, "_blank");
+
+      if (
+        !newWindow ||
+        newWindow.closed ||
+        typeof newWindow.closed === "undefined"
+      ) {
+        // If popup was blocked, provide clickable link
+        addMessage(
+          "assistant",
+          `Popup was blocked. <a href="${searchUrl}" target="_blank">Click here to search for "${cleanQuery}"</a>`
+        );
+      } else {
+        // Success case
+        addMessage("assistant", `Searching for "${cleanQuery}"`);
+      }
+
+      // Restore mic state if needed
+      if (wasListening) {
+        setTimeout(() => {
+          if (!isListening) {
+            startVoiceRecognition();
+          }
+        }, 1000);
+      }
+    } catch (error) {
+      console.error("Error in searchGoogle:", error);
+      addMessage("assistant", `Failed to search for "${query}"`);
+    }
+  }
   // Extract website name from command
   function extractWebsiteName(command) {
     const cleanCommand = command.toLowerCase().replace("open", "").trim();
@@ -365,206 +423,153 @@ document.addEventListener("DOMContentLoaded", () => {
     window.open(youtubeUrl, "_blank");
   }
 
-  //////////////////////////////////////////
-  //   // Website Opening Functionality
-  //   async function openWebsite(websiteName) {
-  //     const wasListening = isListening;
-  //     if (wasListening) stopVoiceRecognition();
+  // function handleCommand(command) {
+  //   const lowerCmd = command.toLowerCase();
 
-  //     websiteName = websiteName.toLowerCase().trim();
-
-  //     // If it's a person's name (no dots, not a clear domain), search Google
-  //     if (!websiteName.includes(".") && !isLikelyDomain(websiteName)) {
-  //       const searchUrl = `https://www.google.com/search?q=${encodeURIComponent(
-  //         websiteName
-  //       )}`;
-  //       openValidWebsite(searchUrl, websiteName, wasListening, true);
-  //       return;
-  //     }
-
-  //     // Otherwise, proceed with domain detection
-  //     websiteName = websiteName.replace(/^https?:\/\//, "");
-  //     websiteName = websiteName.replace(/^www\./, "");
-  //     websiteName = websiteName.replace(/\/$/, "");
-  //     websiteName = websiteName.replace(/\.\/?$/, "");
-
-  //     const tlds = ["com", "org", "net", "io", "co", "dev"];
-  //     let websiteUrl;
-
-  //     if (websiteName.includes(".")) {
-  //       websiteUrl = `https://www.${websiteName}`;
-  //       await tryOpenWebsite(websiteUrl, websiteName, wasListening);
-  //       return;
-  //     }
-
-  //     for (const tld of tlds) {
-  //       websiteUrl = `https://www.${websiteName}.${tld}`;
-  //       const success = await tryOpenWebsite(
-  //         websiteUrl,
-  //         `${websiteName}.${tld}`,
-  //         wasListening,
-  //         false
-  //       );
-  //       if (success) return;
-  //     }
-
-  //     // If no TLD worked, fall back to a Google search
-  //     const searchUrl = `https://www.google.com/search?q=${encodeURIComponent(
-  //       websiteName
-  //     )}`;
-  //     openValidWebsite(searchUrl, websiteName, wasListening, true);
+  //   if (lowerCmd.startsWith("open ")) {
+  //     const website = command.substring(5).trim();
+  //     openWebsite(website);
+  //   } else if (lowerCmd.startsWith("search")) {
+  //     const query = command.substring(11).trim();
+  //     searchGoogle(query);
   //   }
+  // }
 
-  //   // Helper: Check if input resembles a domain (e.g., "google" vs "elon musk")
-  //   function isLikelyDomain(input) {
-  //     const commonDomains = [
-  //       "google",
-  //       "youtube",
-  //       "facebook",
-  //       "amazon",
-  //       "wikipedia",
-  //     ];
-  //     return commonDomains.includes(input) || input.split(" ").length === 1;
-  //   }
-
-  //   // Helper: Try to open a URL (with fallback)
-  //   async function tryOpenWebsite(
-  //     url,
-  //     displayName,
-  //     wasListening,
-  //     showMessage = true
-  //   ) {
-  //     try {
-  //       await fetch(url, { method: "HEAD", mode: "no-cors" });
-  //       openValidWebsite(url, displayName, wasListening, showMessage);
-  //       return true;
-  //     } catch (error) {
-  //       return false;
-  //     }
-  //   }
-
-  //   // Helper: Open a confirmed-valid URL
-  //   function openValidWebsite(url, displayName, wasListening, showMessage) {
-  //     if (showMessage) {
-  //       addMessage(
-  //         "assistant",
-  //         `${getLanguageResponse("openingWebsite")} ${displayName}`
-  //       );
-  //     }
-
-  //     const a = document.createElement("a");
-  //     a.href = url;
-  //     a.target = "_blank";
-  //     a.rel = "noopener noreferrer";
-  //     document.body.appendChild(a);
-  //     a.click();
-  //     document.body.removeChild(a);
-
-  //     if (wasListening) {
-  //       setTimeout(() => !isListening && startVoiceRecognition(), 1000);
-  //     }
-  //   }
-
-  //   // Helper function to check if a website exists before opening
-  //   async function tryOpenWebsite(
-  //     url,
-  //     displayName,
-  //     wasListening,
-  //     showMessage = true
-  //   ) {
-  //     try {
-  //       // Test if the website loads (HEAD request)
-  //       const response = await fetch(url, { method: "HEAD", mode: "no-cors" });
-  //       // If no error, open the website
-  //       openValidWebsite(url, displayName, wasListening, showMessage);
-  //       return true;
-  //     } catch (error) {
-  //       return false; // Website didn't load
-  //     }
-  //   }
-
-  //   // Helper function to actually open the website
-  //   function openValidWebsite(url, displayName, wasListening, showMessage) {
-  //     if (showMessage) {
-  //       addMessage(
-  //         "assistant",
-  //         `${getLanguageResponse("openingWebsite")} ${displayName}`
-  //       );
-  //     }
-
-  //     const a = document.createElement("a");
-  //     a.href = url;
-  //     a.target = "_blank";
-  //     a.rel = "noopener noreferrer";
-  //     document.body.appendChild(a);
-  //     a.click();
-  //     document.body.removeChild(a);
-
-  //     if (wasListening) {
-  //       setTimeout(() => !isListening && startVoiceRecognition(), 1000);
-  //     }
-  //   }
-
-  /////////////////////////////////////////////////////////////////////////////////////////////
-  // Handle voice commands
   function handleCommand(command) {
-    const lowerCmd = command.toLowerCase();
+    const lowerCmd = command.toLowerCase().trim();
 
     if (lowerCmd.startsWith("open ")) {
       const website = command.substring(5).trim();
-      openWebsite(website);
-    } else if (lowerCmd.startsWith("search for ")) {
-      const query = command.substring(11).trim();
-      searchGoogle(query);
+      if (website) {
+        openWebsite(website);
+      } else {
+        addMessage("assistant", "Please specify a website to open");
+      }
+    } else if (lowerCmd.startsWith("search ")) {
+      const query = command.substring(7).trim();
+      if (query) {
+        searchGoogle(query);
+      } else {
+        addMessage("assistant", "Please specify a search query");
+      }
+    } else if (lowerCmd === "search") {
+      addMessage("assistant", "Please specify what you want to search for");
+    } else {
+      addMessage("assistant", "I didn't understand that command");
     }
   }
 
   // Only for opening websites
-  async function openWebsite(websiteName) {
+  // Modified Website Opening Functionality
+  function openWebsite(websiteName) {
+    // Temporarily stop listening while opening website
     const wasListening = isListening;
-    if (wasListening) stopVoiceRecognition();
+    if (wasListening) {
+      stopVoiceRecognition();
+    }
 
+    // Clean the website name
     websiteName = websiteName.toLowerCase().trim();
-    const cleanName = cleanDomainName(websiteName);
 
-    // Try direct URL if it contains a dot
-    if (cleanName.includes(".")) {
-      const websiteUrl = `https://www.${cleanName}`;
-      if (await tryOpenWebsite(websiteUrl, cleanName, wasListening)) return;
+    // Remove common prefixes/suffixes if present
+    websiteName = websiteName.replace(/^https?:\/\//, "");
+    websiteName = websiteName.replace(/^www\./, "");
+    websiteName = websiteName.replace(/\/$/, "");
+
+    // Try to construct the URL
+    let websiteUrl;
+
+    // Check if it's a known domain with special handling
+    if (websiteName.includes(".")) {
+      // If it already has a domain extension
+      websiteUrl = `https://www.${websiteName}`;
+    } else {
+      // Default to .com
+      websiteUrl = `https://www.${websiteName}.com`;
     }
 
-    // Try common TLDs
-    const tlds = ["com", "org", "net", "io", "co", "dev"];
-    for (const tld of tlds) {
-      const websiteUrl = `https://www.${cleanName}.${tld}`;
-      if (
-        await tryOpenWebsite(
-          websiteUrl,
-          `${cleanName}.${tld}`,
-          wasListening,
-          false
-        )
-      )
-        return;
-    }
+    addMessage("assistant", `Opening ${websiteName}`);
 
-    // If no valid website found
-    addMessage(
-      "assistant",
-      `${getLanguageResponse("websiteNotFound")} ${websiteName}`
-    );
-    if (wasListening) setTimeout(() => startVoiceRecognition(), 1000);
+    // Open website in new tab
+    const newWindow = window.open(websiteUrl, "_blank");
+
+    // Restore mic state after a delay
+    if (wasListening) {
+      setTimeout(() => {
+        if (!isListening) {
+          startVoiceRecognition();
+        }
+      }, 1000);
+    }
   }
 
-  // Only for Google searches
   function searchGoogle(query) {
-    const wasListening = isListening;
-    if (wasListening) stopVoiceRecognition();
+    try {
+      // Validate input
+      if (!query || typeof query !== "string" || query.trim() === "") {
+        addMessage("assistant", "Please provide a valid search query");
+        return;
+      }
 
-    const searchUrl = `https://www.google.com/search?q=${encodeURIComponent(
-      query
-    )}`;
-    openValidWebsite(searchUrl, query, wasListening, true);
+      // Store voice recognition state
+      const wasListening = isListening;
+      if (wasListening) {
+        stopVoiceRecognition();
+      }
+
+      // Create search URL with proper encoding
+      const cleanQuery = query.trim();
+      const encodedQuery = encodeURIComponent(cleanQuery);
+      const searchUrl = `https://www.google.com/search?q=${encodedQuery}`;
+
+      // Attempt to open the search in a new tab
+      const newWindow = window.open(searchUrl, "_blank");
+
+      if (
+        !newWindow ||
+        newWindow.closed ||
+        typeof newWindow.closed === "undefined"
+      ) {
+        // If popup was blocked, provide clickable link
+        addMessage(
+          "assistant",
+          `Popup was blocked. <a href="${searchUrl}" target="_blank">Click here to search for "${cleanQuery}"</a>`
+        );
+      } else {
+        // Success case
+        addMessage("assistant", `Searching for "${cleanQuery}"`);
+      }
+
+      // Restore mic state if needed
+      if (wasListening) {
+        setTimeout(() => {
+          if (!isListening) {
+            startVoiceRecognition();
+          }
+        }, 1000);
+      }
+    } catch (error) {
+      console.error("Error in searchGoogle:", error);
+      addMessage("assistant", `Failed to search for "${query}"`);
+    }
+  }
+  // Helper function to open websites
+  function openValidWebsite(url, displayName, wasListening) {
+    // Create a hidden iframe to handle the navigation
+    const iframe = document.createElement("iframe");
+    iframe.src = url;
+    iframe.style.display = "none";
+    document.body.appendChild(iframe);
+
+    setTimeout(() => {
+      document.body.removeChild(iframe);
+      // Also try window.open as fallback
+      window.open(url, "_blank");
+
+      if (wasListening) {
+        setTimeout(() => !isListening && startVoiceRecognition(), 1000);
+      }
+    }, 500);
   }
 
   // Helper functions

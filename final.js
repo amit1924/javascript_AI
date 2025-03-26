@@ -127,6 +127,7 @@ document.addEventListener("DOMContentLoaded", () => {
       chatContainer.scrollTop = chatContainer.scrollHeight;
     }
   }
+
   // Save messages to localStorage
   function saveMessages(sender, text) {
     let messages = JSON.parse(
@@ -150,6 +151,52 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   // Clear all messages from storage and UI
+  function clearAllMessages() {
+    console.log("clearing all messages button is working");
+    localStorage.removeItem("jarvisChatMessages");
+    while (chatContainer.firstChild) {
+      chatContainer.removeChild(chatContainer.firstChild);
+    }
+  }
+
+  // Clear Chat Functionality
+  function showClearConfirmation() {
+    const dialog = document.createElement("div");
+    dialog.className = "clear-confirm-dialog";
+    dialog.innerHTML = `
+        <p>Are you sure you want to clear all chat messages?</p>
+        <div class="clear-confirm-buttons">
+            <button id="confirm-clear">Yes, Clear All</button>
+            <button id="cancel-clear">Cancel</button>
+        </div>
+    `;
+
+    document.body.appendChild(dialog);
+
+    document.getElementById("confirm-clear").addEventListener("click", () => {
+      clearAllMessages();
+      // Add a fresh welcome message
+      addMessage(
+        "assistant",
+        'Hello, I\'m Jarvis. Say <span class="text-blue-300 font-semibold">"Jarvis"</span> to wake me up.',
+        false,
+        true
+      );
+      document.body.removeChild(dialog);
+      showToast(getLanguageResponse("chatCleared"));
+    });
+
+    document.getElementById("cancel-clear").addEventListener("click", () => {
+      document.body.removeChild(dialog);
+    });
+  }
+
+  // Add this with your other event listeners
+  document
+    .getElementById("clear-chat-btn")
+    .addEventListener("click", showClearConfirmation);
+
+  // Update your existing clearAllMessages function
   function clearAllMessages() {
     localStorage.removeItem("jarvisChatMessages");
     while (chatContainer.firstChild) {
@@ -727,12 +774,12 @@ document.addEventListener("DOMContentLoaded", () => {
       const thinkingId = addMessage(
         "assistant",
         `
-          <div class="typing-indicator">
-            <div class="typing-dot"></div>
-            <div class="typing-dot"></div>
-            <div class="typing-dot"></div>
-          </div>
-        `,
+            <div class="typing-indicator">
+              <div class="typing-dot"></div>
+              <div class="typing-dot"></div>
+              <div class="typing-dot"></div>
+            </div>
+          `,
         true
       );
 
@@ -770,50 +817,49 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   }
   function formatAIResponse(text) {
+    // First clean up the markdown formatting
     let formatted = text
-      .replace(/\*\*/g, "")
-      .replace(/\*/g, "")
-      .replace(/`/g, "")
-      .replace(/#/g, "")
-      .replace(/---/g, "")
-      .replace(/_{2,}/g, "")
-      .replace(/^(.*?)\n[-=]{2,}\n/gm, '<h2 class="neon-header">$1</h2>')
-      .replace(/^\s*[-•*]\s+(.*$)/gm, '<li class="glow-item">$1</li>')
-      .replace(/^\s*\d+\.\s+(.*$)/gm, '<li class="numbered-item">$1</li>')
-      .replace(/^>\s*(.*$)/gm, '<blockquote class="neon-quote">$1</blockquote>')
+      .replace(/\*\*(.*?)\*\*/g, '<span class="bold-gradient">$1</span>') // Handle bold text
+      .replace(/\*(.*?)\*/g, '<span class="italic-text">$1</span>') // Handle italic text
+      .replace(/`(.*?)`/g, '<code class="inline-code">$1</code>') // Handle inline code
       .replace(
         /```([\s\S]*?)```/g,
         '<pre class="code-block"><code>$1</code></pre>'
-      )
-      .replace(/\n/g, "<br>");
+      ) // Handle code blocks
+      .replace(/^# (.*$)/gm, '<h1 class="ai-heading">$1</h1>') // Handle h1
+      .replace(/^## (.*$)/gm, '<h2 class="ai-subheading">$1</h2>') // Handle h2
+      .replace(/^### (.*$)/gm, '<h3 class="ai-subheading">$1</h3>') // Handle h3
+      .replace(/^#### (.*$)/gm, '<h4 class="ai-subheading">$1</h4>') // Handle h4
+      .replace(/^##### (.*$)/gm, '<h5 class="ai-subheading">$1</h5>') // Handle h5
+      .replace(/^###### (.*$)/gm, '<h6 class="ai-subheading">$1</h6>') // Handle h6
+      .replace(/---/g, '<hr class="ai-divider">') // Handle horizontal rules
+      .replace(/^\s*[-•*]\s+(.*$)/gm, '<li class="colorful-bullet">$1</li>') // Handle bullet points
+      .replace(/^\s*\d+\.\s+(.*$)/gm, '<li class="numbered-item">$1</li>') // Handle numbered lists
+      .replace(/^>\s*(.*$)/gm, '<blockquote class="ai-quote">$1</blockquote>') // Handle blockquotes
+      .replace(
+        /\[(.*?)\]\((.*?)\)/g,
+        '<a href="$2" class="ai-link" target="_blank">$1</a>'
+      ) // Handle links
+      .replace(/\n/g, "<br>"); // Handle line breaks
 
+    // Wrap bullet points in lists
     formatted = formatted.replace(
-      /(<li class="glow-item">.*?<\/li>(<br>)?)+/g,
-      '<ul class="glow-list">$&</ul>'
+      /(<li class="colorful-bullet">.*?<\/li>(<br>)?)+/g,
+      '<ul class="ai-bullet-list">$&</ul>'
     );
     formatted = formatted.replace(
       /(<li class="numbered-item">.*?<\/li>(<br>)?)+/g,
-      '<ol class="numbered-list">$&</ol>'
+      '<ol class="ai-numbered-list">$&</ol>'
     );
 
-    formatted = formatted
-      .replace(
-        /\[(.*?)\]\((.*?)\)/g,
-        '<a href="$2" class="neon-link" target="_blank">$1 <i class="fas fa-external-link-alt"></i></a>'
-      )
-      .replace(
-        /(https?:\/\/[^\s]+)/g,
-        '<a href="$1" class="neon-link" target="_blank">$1 <i class="fas fa-external-link-alt"></i></a>'
-      );
-
+    // Handle paragraphs (text between two line breaks)
     formatted = formatted.replace(
-      /<br><br>/g,
-      '</p><div class="divider"><div class="divider-line"></div></div><p>'
+      /([^<>]+)(<br><br>|$)/g,
+      '<p class="ai-paragraph">$1</p>'
     );
 
     return `<div class="ai-message-content">${formatted}</div>`;
   }
-
   // Stop speaking
   function stopSpeaking() {
     if (synth.speaking) {

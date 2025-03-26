@@ -33,11 +33,15 @@
                 <span class="text-xs">Listening</span>
             </div>
             
-            <div class="flex items-center space-x-2">
-                <button id="settings-btn" class="text-gray-400 hover:text-blue-400 transition-colors">
-                    <i class="fas fa-cog"></i>
-                </button>
-            </div>
+           <!-- Replace the existing settings button div with this -->
+<div class="flex items-center space-x-2">
+    <button id="clear-chat-btn" class="text-gray-400 hover:text-red-400 transition-colors" title="Clear Chat" >
+        <i class="fas fa-trash-alt"></i>
+    </button>
+    <button id="settings-btn" class="text-gray-400 hover:text-blue-400 transition-colors" title="Settings">
+        <i class="fas fa-cog"></i>
+    </button>
+</div>
         </div>
 
         <!-- Chat Container with Floating Effect -->
@@ -146,6 +150,6 @@
             </div>
         </div>
     </div>
-   <script src="main.js"></script>
+   <script src="final.js"></script>
 </body>
 </html>
