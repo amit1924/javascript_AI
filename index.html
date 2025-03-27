@@ -11,6 +11,7 @@
   
 
     <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="weather.css">
 </head>
 <body class="gradient-bg text-gray-100 min-h-screen md:max-h-screen flex flex-col items-center p-4 md:p-6 transition-colors duration-500 font-sans">
     <div class="w-full max-w-md md:max-w-3xl flex flex-col h-[90vh] md:h-[100vh] ">
@@ -71,7 +72,14 @@
             <button id="stop-speech-btn" class="neon-btn-danger w-14 h-14 rounded-full flex items-center justify-center transition-all hidden float">
                 <i class="fas fa-stop text-xl"></i>
             </button>
+            <button id="upload-image-btn" class="neon-btn w-14 h-14 rounded-full flex items-center justify-center transition-all float relative group">
+                <i class="fas fa-image text-xl"></i>
+                <span class="upload-tooltip">Upload Image</span>
+            </button>
         </div>
+        
+
+        
 
         <!-- Help Text with Subtle Animation -->
         <p class="text-center text-xs text-gray-400 mt-4 animate-pulse">
@@ -146,10 +154,14 @@
                     <button id="test-voice" class="bg-gray-700 hover:bg-gray-600 flex-1 py-2 rounded-lg font-medium transition-colors">
                         Test Voice
                     </button>
+                    
                 </div>
             </div>
         </div>
     </div>
    <script src="final.js"></script>
+   <script src="weather.js"></script>
+   <script src="image.js"></script>
+   <script src="imageAnalyzer.js"></script>
 </body>
 </html>

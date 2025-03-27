@@ -1,4 +1,6 @@
 document.addEventListener("DOMContentLoaded", () => {
+  const imageGenerator = new DynamicImageGenerator();
+  const imageAnalyzer = new ImageAnalyzer(); // Add this line
   // DOM Elements
   const chatContainer = document.getElementById("chat-container");
   const statusLight = document.getElementById("status-light");
@@ -204,6 +206,68 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   }
 
+  //image upload
+  document
+    .getElementById("upload-image-btn")
+    .addEventListener("click", async () => {
+      if (!isActive) {
+        addMessage("assistant", getLanguageResponse("sleepingResponse"));
+        return;
+      }
+
+      addMessage("assistant", "Please select an image file to analyze.", true);
+      const file = await imageAnalyzer.promptForUpload();
+
+      if (!file) {
+        addMessage("assistant", "Image upload canceled.");
+        return;
+      }
+
+      const messageId = addMessage(
+        "assistant",
+        `Analyzing uploaded image: ${file.name}`,
+        true
+      );
+
+      try {
+        const result = await imageAnalyzer.analyzeImage(file);
+
+        if (result.success) {
+          const messageElement = document.getElementById(`msg-${messageId}`);
+          if (messageElement) {
+            const contentElement = messageElement.querySelector(".msg-content");
+            if (contentElement) {
+              contentElement.innerHTML = `
+              <div class="image-analysis-result">
+                <div class="image-preview">
+                  <img src="${result.url}" alt="Analyzed image" class="analyzed-image">
+                  <div class="image-source">Uploaded: ${file.name}</div>
+                </div>
+                <div class="image-description">
+                  <h4>Image Analysis:</h4>
+                  <p>${result.description}</p>
+                </div>
+              </div>
+            `;
+            }
+          }
+        } else {
+          addMessage(
+            "assistant",
+            `Sorry, I couldn't analyze that image: ${result.error}`
+          );
+        }
+      } catch (error) {
+        console.error("Image analysis error:", error);
+        addMessage(
+          "assistant",
+          "Sorry, I encountered an error analyzing that image."
+        );
+      }
+    });
+
+  ///////////////////
+
   // Update language-specific commands
   function updateLanguageCommands() {
     currentCommands.wakeWord =
@@ -360,7 +424,7 @@ document.addEventListener("DOMContentLoaded", () => {
     micBtn.classList.remove("animate-pulse");
   }
 
-  function processCommand(command) {
+  async function processCommand(command) {
     const lowerCommand = command.toLowerCase();
 
     // Check for stop speaking command
@@ -386,6 +450,16 @@ document.addEventListener("DOMContentLoaded", () => {
       return;
     }
 
+    ///reset mic button
+    // Add this helper function
+    function resetMicButton() {
+      isListening = false;
+      micIcon.className = "fas fa-microphone text-xl";
+      listeningIndicator.classList.add("hidden");
+      micBtn.classList.remove("neon-btn-danger", "animate-pulse");
+      micBtn.classList.add("neon-btn");
+    }
+
     // Check for sleep command
     if (lowerCommand.includes(currentCommands.sleepCommand)) {
       if (isActive) {
@@ -395,7 +469,9 @@ document.addEventListener("DOMContentLoaded", () => {
         const response = getLanguageResponse("sleepResponse");
         addMessage("assistant", response);
         speak(response);
-        if (isListening) stopVoiceRecognition();
+        // Force stop voice recognition and reset mic button
+        stopVoiceRecognition();
+        resetMicButton();
       }
       return;
     }
@@ -408,6 +484,190 @@ document.addEventListener("DOMContentLoaded", () => {
         return;
       }
     }
+
+    //weather info
+
+    if (
+      /weather|temperature|temp|forecast|how hot|cold|humid|climate/i.test(
+        lowerCommand
+      )
+    ) {
+      handleWeatherQuery(command, addMessage, speak, voiceSettings.language);
+      return;
+    }
+
+    //image generator///////////////////////////////
+
+    // Check for image generation command
+    // In your processCommand function, update the image generation section to:
+    if (
+      lowerCommand.includes("generate image") ||
+      lowerCommand.includes("create image") ||
+      lowerCommand.includes("show me") ||
+      (lowerCommand.includes("draw") && !lowerCommand.includes("drawer"))
+    ) {
+      if (!isActive) {
+        addMessage("assistant", getLanguageResponse("sleepingResponse"));
+        return;
+      }
+
+      // Extract and clean the prompt
+      let prompt = command
+        .replace(/generate image|create image|show me|draw/gi, "")
+        .trim()
+        .replace(/^of /i, ""); // Remove leading "of"
+
+      if (!prompt) {
+        addMessage(
+          "assistant",
+          "Please describe what image you'd like me to generate."
+        );
+        return;
+      }
+
+      // Add a message indicating we're generating the image
+      const messageId = addMessage(
+        "assistant",
+        `Generating an image of: ${prompt}`,
+        true
+      );
+
+      try {
+        // Generate the image
+        const result = await imageGenerator.generateImage(prompt);
+
+        if (result && result.element) {
+          // Create a container for the image in the chat
+          const messageContainer = document.createElement("div");
+          messageContainer.className = "message-image-container";
+          messageContainer.appendChild(result.element);
+
+          // Find the message we just created and append the image
+          const messageElement = document.getElementById(`msg-${messageId}`);
+          if (messageElement) {
+            const contentElement = messageElement.querySelector(".msg-content");
+            if (contentElement) {
+              contentElement.appendChild(messageContainer);
+            }
+          }
+
+          // Scroll to show the new image
+          chatContainer.scrollTop = chatContainer.scrollHeight;
+        }
+      } catch (error) {
+        console.error("Image generation error:", error);
+        addMessage(
+          "assistant",
+          "Sorry, I couldn't generate that image. Please try again."
+        );
+      }
+      return;
+    }
+
+    //////////////////////////////////////
+
+    //////////////////////////////////////////////////////////////////////////////////
+    //image to text functionality
+
+    // In your processCommand function, update the image analysis condition:
+    if (
+      lowerCommand.includes("describe image") ||
+      lowerCommand.includes("what's in this image") ||
+      lowerCommand.includes("analyze image") ||
+      (lowerCommand.includes("what") && lowerCommand.includes("image")) ||
+      lowerCommand.includes("upload image")
+    ) {
+      if (!isActive) {
+        addMessage("assistant", getLanguageResponse("sleepingResponse"));
+        return;
+      }
+
+      let imageSource = null;
+
+      // Case 1: URL provided in command
+      const urlMatch = command.match(/(https?:\/\/[^\s]+)/i);
+      if (urlMatch && urlMatch[0]) {
+        imageSource = urlMatch[0];
+      }
+      // Case 2: User wants to upload an image
+      else if (lowerCommand.includes("upload image")) {
+        addMessage(
+          "assistant",
+          "Please select an image file to analyze.",
+          true
+        );
+        imageSource = await imageAnalyzer.promptForUpload();
+        if (!imageSource) {
+          addMessage("assistant", "Image upload canceled.");
+          return;
+        }
+      }
+      // Case 3: No source specified
+      else {
+        addMessage(
+          "assistant",
+          `Please either:<br>
+      1. Provide an image URL after your request, or<br>
+      2. Say "upload image" to select a file from your device`,
+          true
+        );
+        return;
+      }
+
+      // Add analyzing message
+      const messageId = addMessage(
+        "assistant",
+        imageSource instanceof File
+          ? `Analyzing uploaded image: ${imageSource.name}`
+          : `Analyzing image at: ${imageSource}`,
+        true
+      );
+
+      try {
+        const result = await imageAnalyzer.analyzeImage(imageSource);
+
+        if (result.success) {
+          const messageElement = document.getElementById(`msg-${messageId}`);
+          if (messageElement) {
+            const contentElement = messageElement.querySelector(".msg-content");
+            if (contentElement) {
+              contentElement.innerHTML = `
+            <div class="image-analysis-result">
+              <div class="image-preview">
+                <img src="${
+                  result.url
+                }" alt="Analyzed image" class="analyzed-image">
+                ${
+                  result.sourceType === "file"
+                    ? `<div class="image-source">Uploaded: ${imageSource.name}</div>`
+                    : ""
+                }
+              </div>
+              <div class="image-description">
+                <h4>Image Analysis:</h4>
+                <p>${result.description}</p>
+              </div>
+            </div>
+          `;
+            }
+          }
+        } else {
+          addMessage(
+            "assistant",
+            `Sorry, I couldn't analyze that image: ${result.error}`
+          );
+        }
+      } catch (error) {
+        console.error("Image analysis error:", error);
+        addMessage(
+          "assistant",
+          "Sorry, I encountered an error analyzing that image."
+        );
+      }
+      return;
+    }
+
+    /////////////////////////////////////////////////////
 
     // Check for YouTube song command
     if (
